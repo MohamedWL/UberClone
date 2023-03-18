@@ -51,7 +51,6 @@ const NavigateCard = () => {
         <TouchableOpacity 
             style={{justifyContent:'space-between', backgroundColor:'black', flexDirection:'row', width:60, padding:4, borderRadius:'20px', display:'flex', height:45, width:90, alignItems:'center', justifyContent:'center'}}
             onPress={()=> navigation.navigate("RideOptionsCard")}
-            //timestamp 5:59:34
             >
             <Icon
                 name="car"

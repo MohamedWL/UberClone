@@ -2,8 +2,8 @@ import { StyleSheet, Text, View } from 'react-native'
 import {React, useEffect, useRef} from 'react'
 import MapView from 'react-native-maps/lib/MapView'
 import { MapMarker } from 'react-native-maps/lib/MapMarker'
-import { useSelector } from 'react-redux'
-import { selectDestination, selectOrigin } from '../slices/navSlice'
+import { useDispatch, useSelector } from 'react-redux'
+import { selectDestination, selectOrigin, setTravelTimeInformation } from '../slices/navSlice'
 import MapViewDirections from 'react-native-maps-directions'
 import {GOOGLE_MAPS_APIKEY} from "@env"
 
@@ -13,6 +13,7 @@ const Map = () => {
     const origin = useSelector(selectOrigin); //to pull from the data layer, see navSlice
     const destination = useSelector(selectDestination);
     const mapRef = useRef(null);
+    const dispatch = useDispatch();
 
     //used to find directions every time the origin or the destination change
     useEffect(()=>{
@@ -22,6 +23,25 @@ const Map = () => {
             edgePadding: {top:100 , right: 100, bottom:100, left:100},
         });
     },  [origin,destination]);
+
+    /*responsible for calculating the travel time, need the origin, destination and the api key
+    we will calculate it, send it to the redux store and it's going to get pulled when we select a ride
+    */
+    useEffect(() =>{
+        if(!origin||!destination) return;
+        /*fetch will pull information from the endpoint. Then will get the response and parse it as a json object
+        */
+        const getTravelTime = async() => {
+            fetch(`https://maps.googleapis.com/maps/api/distancematrix/json?
+            units=imperial&origins=${origin.description}&destinations=${destination.description}&key=${GOOGLE_MAPS_APIKEY}`
+            ).then((res) => res.json())
+            .then((data) => {
+                dispatch(setTravelTimeInformation(data.rows[0].elements[0]));
+            })
+        };
+
+        getTravelTime();
+    }, [origin,destination,GOOGLE_MAPS_APIKEY])
 
   return (
     <MapView
@@ -75,4 +95,36 @@ const Map = () => {
 
 export default Map
 
-//const styles = StyleSheet.create({})
+/*const styles = StyleSheet.create({})
+
+if we console.log in the useEffect
+Object {
+  "destination_addresses": Array [
+    "Toronto, ON, Canada",
+  ],
+  "origin_addresses": Array [
+    "Montreal, QC, Canada",
+  ],
+  "rows": Array [
+    Object {
+      "elements": Array [
+        Object {
+          "distance": Object {
+            "text": "542 km",
+            "value": 541601,
+          },
+          "duration": Object {
+            "text": "5 hours 20 mins",
+            "value": 19186,
+          },
+          "status": "OK",
+        },
+      ],
+    },
+  ],
+  "status": "OK",
+}
+
+
+
+*/
